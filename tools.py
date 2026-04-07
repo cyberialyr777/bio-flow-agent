@@ -1,12 +1,10 @@
 from strands import tool
-import json
 import os
 import smtplib
+import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
-import datetime
-import os.path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,157 +12,11 @@ from googleapiclient.discovery import build
 
 load_dotenv()
 
-@tool
-def consultar_base_cientifica(tema: str) -> str:
-    """
-    Busca información en la base de datos científica local sobre un tema específico.
-    Usa esta herramienta cuando la usuaria pregunte el 'por qué' biológico de algo.
-    """
-    # En un demo sencillo, leemos un archivo de texto
-    try:
-        with open("conocimiento_bio.txt", "r", encoding="utf-8") as file:
-            base_datos = file.read()
-            
-        # Aquí podrías usar una búsqueda más compleja, pero para el demo 
-        # devolvemos un fragmento que contenga la palabra clave
-        parrafos = base_datos.split("\n\n")
-        resultados = [p for p in parrafos if tema.lower() in p.lower()]
-        
-        if resultados:
-            return f"Extracto científico encontrado: {resultados[0]}"
-        else:
-            return "No se encontró información específica en los papers actuales."
-            
-    except FileNotFoundError:
-        return "Error: Base de datos científica no disponible."
-
-from strands import tool
-
-@tool
-def generar_lista_super(fase: str) -> str:
-    """
-    Genera una lista de compras extensa y categorizada para optimizar la fase hormonal.
-    """
-    # Expandimos las opciones para que el plan se sienta completo (Fuel)
-    recomendaciones = {
-        "Menstrual": (
-            "PROTEÍNAS: Carne roja magra, lentejas.\n"
-            "GRASAS: Semillas de calabaza, nueces.\n"
-            "CARBOS: Frutos rojos, chocolate negro (>70%), jengibre, espinacas."
-        ),
-        "Folicular": (
-            "PROTEÍNAS: Pollo, huevos, tofu.\n"
-            "GRASAS: Aguacate, semillas de lino, almendras.\n"
-            "CARBOS: Kimchi, yogur griego, brócoli, coliflor, calabacín."
-        ),
-        "Ovulatoria": (
-            "PROTEÍNAS: Salmón, camarones, garbanzos.\n"
-            "GRASAS: Semillas de sésamo, pistachos.\n"
-            "CARBOS: Quinoa, frambuesas, espárragos, acelgas."
-        ),
-        "Lútea": (
-            "PROTEÍNAS: Pavo, bacalao, edamames.\n"
-            "GRASAS: Nueces de Brasil (magnesio), semillas de girasol.\n"
-            "CARBOS: Camote, arroz integral, plátano macho, avena."
-        )
-    }
-    
-    ingredientes = recomendaciones.get(fase, "Vegetales variados y proteína magra.")
-    return f"🛒 LISTA DE COMPRAS (Fase {fase}):\n{ingredientes}"
-
-@tool
-def sugerir_recetas(fase: str) -> str:
-    """
-    Nombra una receta ideal para la fase. Pregunta si desea la preparación.
-    """
-    nombres = {
-        "Menstrual": "Bowl de Hierro y Energía (Quinoa y Jengibre)",
-        "Folicular": "Tacos 'Glow' de Lechuga y Probióticos",
-        "Ovulatoria": "Ensalada de Salmón y Frutos Rojos",
-        "Lútea": "Cena de Descanso (Camote y Arroz Integral)"
-    }
-    nombre = nombres.get(fase, "Ensalada Bio-Flow")
-    return f"🍳 Sugerencia: {nombre}. ¿Te gustaría que te explique los ingredientes y cómo prepararlo?"
-
-@tool
-def explicar_preparacion(nombre_receta: str) -> str:
-    """
-    Proporciona los ingredientes exactos y el paso a paso de una receta específica.
-    """
-    detalles = {
-        "Bowl de Hierro y Energía (Quinoa y Jengibre)": (
-            "INGREDIENTES: 1/2 taza de quinoa cocida, 1 puñado de espinacas frescas, lentejas o carne magra picada, 1 cdita de jengibre rallado, semillas de calabaza.\n"
-            "PREPARACIÓN: 1. Sirve una base de espinacas y quinoa en un bowl. 2. Añade la proteína (lentejas/carne). "
-            "3. Mezcla aceite de oliva con el jengibre rallado para hacer un aderezo y viértelo encima. 4. Espolvorea las semillas de calabaza. ¡No olvides tu trocito de chocolate negro de postre!"
-        ),
-        "Tacos 'Glow' de Lechuga y Probióticos": (
-            "INGREDIENTES: Hojas de lechuga orejona (para usar de tortilla), aguacate, yogur griego (para salsa), semillas de lino, brócoli o coliflor picada, pollo o tofu.\n"
-            "PREPARACIÓN: 1. Saltea el pollo/tofu junto con el brócoli usando poco aceite. 2. Prepara tus 'tortillas' de lechuga. "
-            "3. Rellena con la mezcla salteada y rodajas de aguacate. 4. Decora con semillas de lino y un toque de yogur griego a modo de crema."
-        ),
-        "Ensalada de Salmón y Frutos Rojos": (
-            "INGREDIENTES: 1 filete de salmón, espárragos o acelgas, un puñado de frambuesas frescas, 1/2 taza de quinoa, semillas de sésamo o pistachos.\n"
-            "PREPARACIÓN: 1. Cocina el salmón a la plancha a fuego medio junto con los espárragos. 2. En un plato, coloca la quinoa como base. "
-            "3. Pon el salmón y los espárragos encima. 4. Agrega las frambuesas frescas alrededor y espolvorea los pistachos o semillas de sésamo para el toque crujiente."
-        ),
-        "Cena de Descanso (Camote y Arroz Integral)": (
-            "INGREDIENTES: 1 camote mediano, 1/2 taza de arroz integral, plátano macho, nueces de Brasil, pavo o bacalao (opcional).\n"
-            "PREPARACIÓN: 1. Hornea o hierve el camote cortado en cubos. 2. Cocina el arroz a fuego lento. "
-            "3. Saltea unas rodajas de plátano macho. 4. Mezcla todo en un bowl (puedes añadir pavo si deseas más proteína) y añade las nueces de Brasil troceadas para tu dosis de magnesio."
-        )
-    }
-    return detalles.get(nombre_receta, "Lo siento, no tengo los detalles de esa receta aún. ¡Asegúrate de que el nombre coincida exactamente!")
-
-@tool
-def obtener_enfoque_mental(fase: str) -> str:
-    """
-    Proporciona un consejo de productividad y enfoque mental basado en el estado neuroquímico de la fase hormonal.
-    
-    Args:
-        fase (str): La fase actual (Menstrual, Folicular, Ovulatoria o Lútea).
-    """
-    enfoques = {
-        "Menstrual": "Día de evaluación e introspección. Tu cerebro tiene mayor conectividad. Ideal para revisar métricas, planear a largo plazo y descansar.",
-        "Folicular": "¡Pico de creatividad! Tu dopamina está subiendo. Excelente día para iniciar proyectos complejos, hacer brainstorming y tomar riesgos calculados.",
-        "Ovulatoria": "Día de máxima comunicación y empatía. Perfecto para liderar reuniones, presentar tu reto técnico en Talent Land o hacer networking.",
-        "Lútea": "Modo 'Deep Work' (Trabajo Profundo). La progesterona te da un enfoque detallista. Es el momento de cerrar tareas pendientes y organizar."
-    }
-    
-    hack = enfoques.get(fase, "Concéntrate en la tarea más importante del día y toma pausas activas.")
-    return f"Hack de Enfoque Mental ({fase}): {hack}"
-
-tool
-def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
-    """
-    Envía por correo el plan de 7 días detallado.
-    """
-    remitente = os.getenv("EMAIL_SENDER")
-    password = os.getenv("EMAIL_PASSWORD")
-    
-    # Validamos que el plan no venga vacío
-    if "irá aquí" in plan_semanal_completo or len(plan_semanal_completo) < 50:
-        return "Error: El plan generado es demasiado corto o es un placeholder. Por favor, redáctalo completo."
-
-    msg = MIMEMultipart()
-    msg['From'] = remitente
-    msg['To'] = correo
-    msg['Subject'] = "Tu Bio-Plan Semanal: Optimización Hormonal de 7 Días 🧬"
-    msg.attach(MIMEText(plan_semanal_completo, 'plain', 'utf-8'))
-
-    try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(remitente, password)
-        server.send_message(msg)
-        server.quit()
-        return f"Reporte enviado con éxito a {correo}."
-    except Exception as e:
-        return f"Error al enviar correo: {str(e)}"
-
+# --- CONFIGURACIÓN DE CALENDARIO ---
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def obtener_servicio_calendario():
     creds = None
-    # El archivo token.json guarda tus credenciales después de la primera vez
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     
@@ -179,19 +31,153 @@ def obtener_servicio_calendario():
     
     return build('calendar', 'v3', credentials=creds)
 
+# --- HERRAMIENTAS ---
+
+@tool
+def calcular_fase(fecha_inicio_periodo: str, fecha_hoy: str) -> str:
+    """
+    Calcula la fase hormonal basándose en el inicio del periodo y la fecha actual (ambas YYYY-MM-DD).
+    """
+    try:
+        inicio = datetime.datetime.strptime(fecha_inicio_periodo, "%Y-%m-%d")
+        actual = datetime.datetime.strptime(fecha_hoy, "%Y-%m-%d")
+        dias = (actual - inicio).days + 1
+        
+        # Lógica basada en un ciclo promedio de 28-30 días
+        if 1 <= dias <= 5: return "Menstrual"
+        elif 6 <= dias <= 13: return "Folicular"
+        elif dias == 14 or dias == 15: return "Ovulatoria"
+        elif 16 <= dias <= 32: return "Lútea"
+        else: return "Fase no identificada (Ciclo fuera de rango)"
+    except Exception as e:
+        return f"Error en el cálculo: {str(e)}"
+
+@tool
+def consultar_base_cientifica(tema: str) -> str:
+    """Busca información en la base de datos científica local."""
+    try:
+        with open("conocimiento_bio.txt", "r", encoding="utf-8") as file:
+            base_datos = file.read()
+        
+        parrafos = base_datos.split("\n\n")
+        # Dividimos la consulta en palabras (keywords) ignorando conectores cortos
+        keywords = [w.lower() for w in tema.split() if len(w) > 3]
+        
+        for p in parrafos:
+            # Si TODAS las palabras clave están en el párrafo, es el correcto
+            if all(k in p.lower() for k in keywords):
+                return f"Extracto científico: {p.strip()}"
+        
+        # Si no encuentra todas juntas, intentamos buscar si al menos aparece una (como camote)
+        for p in parrafos:
+            if any(k in p.lower() for k in keywords):
+                return f"Extracto científico relacionado: {p.strip()}"
+                
+        return "No se encontró información específica sobre ese tema."
+    except FileNotFoundError:
+        return "Error: Base de datos científica no disponible."
+
+@tool
+def generar_lista_super(fase: str) -> str:
+    """Genera una lista de compras categorizada para la fase hormonal."""
+    # Convertimos a formato "Fase" (primera mayúscula) para que coincida con el diccionario
+    fase = fase.capitalize() 
+    
+    recomendaciones = {
+        "Menstrual": "PROTEÍNAS: Carne roja magra, lentejas. GRASAS: Semillas de calabaza. CARBOS: Frutos rojos, jengibre.",
+        "Folicular": "PROTEÍNAS: Pollo, huevos. GRASAS: Aguacate, almendras. CARBOS: Kimchi, brócoli, coliflor.",
+        "Ovulatoria": "PROTEÍNAS: Salmón, garbanzos. GRASAS: Semillas de sésamo. CARBOS: Quinoa, frambuesas.",
+        "Lútea": "PROTEÍNAS: Pavo, edamames. GRASAS: Nueces de Brasil. CARBOS: Camote, arroz integral, avena."
+    }
+    return f"🛒 LISTA DE COMPRAS ({fase}):\n{recomendaciones.get(fase, 'Vegetales y proteína magra.')}"
+
+
+@tool
+def sugerir_recetas(fase: str) -> str:
+    """Nombra una receta ideal para la fase y ofrece la preparación."""
+    fase = fase.capitalize() # <--- Estandarizamos aquí también
+    
+    nombres = {
+        "Menstrual": "Bowl de Hierro y Energía (Quinoa y Jengibre)",
+        "Folicular": "Tacos 'Glow' de Lechuga y Probióticos",
+        "Ovulatoria": "Ensalada de Salmón y Frutos Rojos",
+        "Lútea": "Cena de Descanso (Camote y Arroz Integral)"
+    }
+    # Ahora sí encontrará la receta correcta
+    nombre = nombres.get(fase, "Ensalada Bio-Flow") 
+    return f"🍳 Sugerencia: {nombre}. ¿Te gustaría que te explique los ingredientes y cómo prepararlo?"
+
+@tool
+def explicar_preparacion(nombre_receta: str) -> str:
+    """Proporciona los ingredientes y el paso a paso detallado de una receta."""
+    detalles = {
+        "Bowl de Hierro y Energía (Quinoa y Jengibre)": (
+            "INGREDIENTES: Quinoa cocida, espinacas, lentejas, jengibre rallado, semillas de calabaza.\n"
+            "PREPARACIÓN: 1. Mezcla la quinoa y espinacas. 2. Añade la proteína. 3. Adereza con jengibre y aceite."
+        ),
+        "Tacos 'Glow' de Lechuga y Probióticos": (
+            "INGREDIENTES: Hojas de lechuga, aguacate, yogur griego, semillas de lino, brócoli, pollo.\n"
+            "PREPARACIÓN: 1. Saltea el pollo y brócoli. 2. Usa la lechuga como taco. 3. Agrega aguacate y yogur."
+        ),
+        "Ensalada de Salmón y Frutos Rojos": (
+            "INGREDIENTES: Salmón, espárragos, frambuesas, quinoa, pistachos.\n"
+            "PREPARACIÓN: 1. Cocina el salmón y espárragos. 2. Sirve sobre quinoa. 3. Decora con frambuesas."
+        ),
+        "Cena de Descanso (Camote y Arroz Integral)": (
+            "INGREDIENTES: Camote mediano, arroz integral, plátano macho, nueces de Brasil.\n"
+            "PREPARACIÓN: 1. Hornea el camote. 2. Cocina el arroz. 3. Saltea el plátano y mezcla todo con nueces."
+        )
+    }
+    return detalles.get(nombre_receta, "No tengo los detalles de esa receta aún.")
+
+@tool
+def obtener_enfoque_mental(fase: str) -> str:
+    """Consejo de productividad basado en el estado neuroquímico."""
+    fase = fase.capitalize() # <--- Y aquí
+    
+    enfoques = {
+        "Menstrual": "Fase de introspección: ideal para revisar métricas y planear a largo plazo.",
+        "Folicular": "Pico de creatividad: excelente para brainstorming e iniciar proyectos nuevos.",
+        "Ovulatoria": "Máxima comunicación: perfecto para reuniones, networking y presentaciones.",
+        "Lútea": "Modo Deep Work: enfoque detallista para cerrar tareas y organizar pendientes."
+    }
+    return f"Hack de Enfoque ({fase}): {enfoques.get(fase, 'Enfoque en la tarea principal.')}"
+
+@tool
+def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
+    """Envía por correo el plan detallado de 7 días usando formato HTML."""
+    remitente = os.getenv("EMAIL_SENDER")
+    password = os.getenv("EMAIL_PASSWORD")
+    
+    if len(plan_semanal_completo) < 50:
+        return "Error: El plan generado parece estar incompleto."
+
+    msg = MIMEMultipart()
+    msg['From'] = remitente
+    msg['To'] = correo
+    msg['Subject'] = "Tu Bio-Plan Semanal: Optimización Hormonal 🧬"
+    
+    # Cambiamos 'plain' por 'html' para que reconozca etiquetas de diseño
+    msg.attach(MIMEText(plan_semanal_completo, 'html', 'utf-8'))
+
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(remitente, password)
+        server.send_message(msg)
+        server.quit()
+        return f"Reporte enviado exitosamente a {correo}."
+    except Exception as e:
+        return f"Error al enviar correo: {str(e)}"
+
 @tool
 def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
-    """
-    Agenda 7 días de Bio-Checks. Acepta formatos como '7 PM', '19:00', '8am'.
-    """
-    service = obtener_servicio_calendario()
-    
-    # --- Limpiador de hora inteligente ---
-    hora_input = hora_input.lower().replace(" ", "")
-    hora = 17 # default
-    minuto = 0
-    
+    """Agenda 7 días de Bio-Checks en Google Calendar."""
     try:
+        service = obtener_servicio_calendario()
+        hora_input = hora_input.lower().replace(" ", "")
+        hora, minuto = 17, 0
+        
         if "pm" in hora_input:
             hora = int(hora_input.replace("pm", "").split(":")[0]) + 12
         elif "am" in hora_input:
@@ -200,22 +186,21 @@ def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
             hora, minuto = map(int, hora_input.split(':'))
         else:
             hora = int(hora_input)
-    except:
-        pass # Usa el default 17:00 si falla
 
-    ahora = datetime.datetime.now()
-    for dia in range(7):
-        fecha_evento = ahora + datetime.timedelta(days=dia)
-        inicio = fecha_evento.replace(hour=hora % 24, minute=minuto, second=0, microsecond=0)
-        fin = inicio + datetime.timedelta(minutes=30)
-        
-        titulo = f"Bio-Check ({fase_actual}) - Día {dia+1}"
-        evento = {
-            'summary': titulo,
-            'description': 'Optimización Bio-Flow.',
-            'start': {'dateTime': inicio.isoformat(), 'timeZone': 'America/Mexico_City'},
-            'end': {'dateTime': fin.isoformat(), 'timeZone': 'America/Mexico_City'},
-        }
-        service.events().insert(calendarId='primary', body=evento).execute()
+        ahora = datetime.datetime.now()
+        for dia in range(7):
+            fecha_evento = ahora + datetime.timedelta(days=dia)
+            inicio = fecha_evento.replace(hour=hora % 24, minute=minuto, second=0, microsecond=0)
+            fin = inicio + datetime.timedelta(minutes=30)
             
-    return f"7 Bio-Checks agendados a las {hora}:{minuto:02d}."
+            evento = {
+                'summary': f'Bio-Check ({fase_actual}) - Día {dia+1}',
+                'description': 'Momento para alinear tu energía con tu biología.',
+                'start': {'dateTime': inicio.isoformat(), 'timeZone': 'America/Mexico_City'},
+                'end': {'dateTime': fin.isoformat(), 'timeZone': 'America/Mexico_City'},
+            }
+            service.events().insert(calendarId='primary', body=evento).execute()
+            
+        return f"Éxito: 7 Bio-Checks agendados a las {hora % 24:02d}:{minuto:02d}."
+    except Exception as e:
+        return f"Error en calendario: {str(e)}"

@@ -28,7 +28,7 @@ Hoy es: {fecha_hoy}
 """.format(fecha_hoy=datetime.now().strftime("%Y-%m-%d"))
 
 def process_bio_flow(user_input, history=[]):
-    model_id = "amazon.nova-micro-v1:0"
+    model_id = "anthropic.claude-3-haiku-20240307-v1:0"
     
     # Combinamos el historial para que el agente recuerde lo que ya se dijo
     messages = history + [{"role": "user", "content": [{"text": user_input}]}]

@@ -83,19 +83,17 @@ tools_list = [
 ]
 
 # Modelo actualizado a Claude 3.7 Sonnet
-MODELO_TOP = "anthropic.claude-3-7-sonnet-20250219-v1:0"
+MODELO_TOP = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 
 try:
     bio_flow_agent = Agent(
         model=MODELO_TOP,
         system_prompt=SISTEMA,
-        tools=tools_list,
-        temperature=0.2
+        tools=tools_list
     )
 except TypeError:
     bio_flow_agent = Agent(
         SISTEMA,
         model=MODELO_TOP,
-        tools=tools_list,
-        temperature=0.2
+        tools=tools_list
     )

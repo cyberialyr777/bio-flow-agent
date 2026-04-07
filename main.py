@@ -2,7 +2,7 @@ from agent import bio_flow_agent
 
 def iniciar_chat():
     print("="*50)
-    print("🤖 INICIANDO BIO-FLOW: TERMINAL INTERACTIVA")
+    print("INICIANDO BIO-FLOW: TERMINAL INTERACTIVA")
     print("Escribe 'salir', 'exit' o 'quit' para terminar.")
     print("="*50)
 
@@ -18,9 +18,9 @@ def iniciar_chat():
         # 3. Si no escribiste salir, el input se va al agente
         try:
             respuesta = bio_flow_agent(user_input)
-            print(f"\n🧬 Bio-Flow:\n{respuesta}")
+            print(f"\nBio-Flow:\n{respuesta}")
         except Exception as e:
-            print(f"\n⚠️ Error de ejecución: {e}")
+            print(f"\nError de ejecución: {e}")
 
 if __name__ == "__main__":
     iniciar_chat()

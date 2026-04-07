@@ -35,26 +35,30 @@ def obtener_servicio_calendario():
 
 @tool
 def calcular_fase(fecha_inicio_periodo: str, fecha_hoy: str) -> str:
-    """
-    Calcula la fase hormonal basándose en el inicio del periodo y la fecha actual (ambas YYYY-MM-DD).
-    """
+    """Calcula la fase hormonal con validación estricta de fechas ISO."""
     try:
         inicio = datetime.datetime.strptime(fecha_inicio_periodo, "%Y-%m-%d")
         actual = datetime.datetime.strptime(fecha_hoy, "%Y-%m-%d")
         dias = (actual - inicio).days + 1
         
-        # Lógica basada en un ciclo promedio de 28-30 días
-        if 1 <= dias <= 5: return "Menstrual"
-        elif 6 <= dias <= 13: return "Folicular"
-        elif dias == 14 or dias == 15: return "Ovulatoria"
-        elif 16 <= dias <= 32: return "Lútea"
-        else: return "Fase no identificada (Ciclo fuera de rango)"
-    except Exception as e:
-        return f"Error en el cálculo: {str(e)}"
+        if dias < 0: 
+            return "Error: La fecha de inicio no puede ser en el futuro."
+        if 1 <= dias <= 5: 
+            return "Menstrual"
+        elif 6 <= dias <= 13: 
+            return "Folicular"
+        elif 14 <= dias <= 15: 
+            return "Ovulatoria"
+        elif 16 <= dias <= 32: 
+            return "Lútea"
+        else: 
+            return "Fase no identificada: El ciclo excede los 32 días. Por favor, verifica las fechas."
+    except ValueError:
+        return "Error: Formato de fecha inválido. Por favor usa YYYY-MM-DD."
 
 @tool
 def consultar_base_cientifica(tema: str) -> str:
-    """Busca información en la base de datos científica local."""
+    """Busca información en la base de datos científica local usando palabras clave."""
     try:
         with open("conocimiento_bio.txt", "r", encoding="utf-8") as file:
             base_datos = file.read()
@@ -68,7 +72,7 @@ def consultar_base_cientifica(tema: str) -> str:
             if all(k in p.lower() for k in keywords):
                 return f"Extracto científico: {p.strip()}"
         
-        # Si no encuentra todas juntas, intentamos buscar si al menos aparece una (como camote)
+        # Si no encuentra todas juntas, buscamos si al menos aparece una
         for p in parrafos:
             if any(k in p.lower() for k in keywords):
                 return f"Extracto científico relacionado: {p.strip()}"
@@ -76,13 +80,13 @@ def consultar_base_cientifica(tema: str) -> str:
         return "No se encontró información específica sobre ese tema."
     except FileNotFoundError:
         return "Error: Base de datos científica no disponible."
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 @tool
 def generar_lista_super(fase: str) -> str:
     """Genera una lista de compras categorizada para la fase hormonal."""
-    # Convertimos a formato "Fase" (primera mayúscula) para que coincida con el diccionario
     fase = fase.capitalize() 
-    
     recomendaciones = {
         "Menstrual": "PROTEÍNAS: Carne roja magra, lentejas. GRASAS: Semillas de calabaza. CARBOS: Frutos rojos, jengibre.",
         "Folicular": "PROTEÍNAS: Pollo, huevos. GRASAS: Aguacate, almendras. CARBOS: Kimchi, brócoli, coliflor.",
@@ -91,19 +95,16 @@ def generar_lista_super(fase: str) -> str:
     }
     return f"🛒 LISTA DE COMPRAS ({fase}):\n{recomendaciones.get(fase, 'Vegetales y proteína magra.')}"
 
-
 @tool
 def sugerir_recetas(fase: str) -> str:
     """Nombra una receta ideal para la fase y ofrece la preparación."""
-    fase = fase.capitalize() # <--- Estandarizamos aquí también
-    
+    fase = fase.capitalize()
     nombres = {
         "Menstrual": "Bowl de Hierro y Energía (Quinoa y Jengibre)",
         "Folicular": "Tacos 'Glow' de Lechuga y Probióticos",
         "Ovulatoria": "Ensalada de Salmón y Frutos Rojos",
         "Lútea": "Cena de Descanso (Camote y Arroz Integral)"
     }
-    # Ahora sí encontrará la receta correcta
     nombre = nombres.get(fase, "Ensalada Bio-Flow") 
     return f"🍳 Sugerencia: {nombre}. ¿Te gustaría que te explique los ingredientes y cómo prepararlo?"
 
@@ -133,8 +134,7 @@ def explicar_preparacion(nombre_receta: str) -> str:
 @tool
 def obtener_enfoque_mental(fase: str) -> str:
     """Consejo de productividad basado en el estado neuroquímico."""
-    fase = fase.capitalize() # <--- Y aquí
-    
+    fase = fase.capitalize()
     enfoques = {
         "Menstrual": "Fase de introspección: ideal para revisar métricas y planear a largo plazo.",
         "Folicular": "Pico de creatividad: excelente para brainstorming e iniciar proyectos nuevos.",
@@ -157,7 +157,7 @@ def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
     msg['To'] = correo
     msg['Subject'] = "Tu Bio-Plan Semanal: Optimización Hormonal 🧬"
     
-    # Cambiamos 'plain' por 'html' para que reconozca etiquetas de diseño
+    # Formato en HTML para aceptar etiquetas de diseño y color
     msg.attach(MIMEText(plan_semanal_completo, 'html', 'utf-8'))
 
     try:
@@ -172,20 +172,22 @@ def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
 
 @tool
 def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
-    """Agenda 7 días de Bio-Checks en Google Calendar."""
+    """Agenda 7 días de Bio-Checks en Google Calendar. Devuelve un error descriptivo si falla."""
     try:
         service = obtener_servicio_calendario()
-        hora_input = hora_input.lower().replace(" ", "")
+        hora_input_limpia = hora_input.lower().replace(" ", "")
         hora, minuto = 17, 0
         
-        if "pm" in hora_input:
-            hora = int(hora_input.replace("pm", "").split(":")[0]) + 12
-        elif "am" in hora_input:
-            hora = int(hora_input.replace("am", "").split(":")[0])
-        elif ":" in hora_input:
-            hora, minuto = map(int, hora_input.split(':'))
+        if "pm" in hora_input_limpia:
+            hora_base = int(hora_input_limpia.replace("pm", "").split(":")[0])
+            hora = hora_base if hora_base == 12 else hora_base + 12
+        elif "am" in hora_input_limpia:
+            hora_base = int(hora_input_limpia.replace("am", "").split(":")[0])
+            hora = 0 if hora_base == 12 else hora_base
+        elif ":" in hora_input_limpia:
+            hora, minuto = map(int, hora_input_limpia.split(':'))
         else:
-            hora = int(hora_input)
+            hora = int(hora_input_limpia)
 
         ahora = datetime.datetime.now()
         for dia in range(7):
@@ -202,5 +204,7 @@ def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
             service.events().insert(calendarId='primary', body=evento).execute()
             
         return f"Éxito: 7 Bio-Checks agendados a las {hora % 24:02d}:{minuto:02d}."
+    except ValueError:
+        return f"Error: No pude entender la hora '{hora_input}'. Por favor, pídele a la usuaria un formato claro como '8 AM' o '20:00'."
     except Exception as e:
-        return f"Error en calendario: {str(e)}"
+        return f"Error crítico en calendario: {str(e)}. Por favor informa a la usuaria que el calendario no está disponible."

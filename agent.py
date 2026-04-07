@@ -82,7 +82,6 @@ tools_list = [
     agendar_bio_checks
 ]
 
-# Modelo actualizado a Claude 3.7 Sonnet
 MODELO_TOP = "us.anthropic.claude-sonnet-4-20250514-v1:0"
 
 try:

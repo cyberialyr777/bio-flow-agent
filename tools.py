@@ -12,14 +12,12 @@ from googleapiclient.discovery import build
 
 load_dotenv()
 
-# --- CONFIGURACIÓN DE CALENDARIO ---
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def obtener_servicio_calendario():
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -28,10 +26,8 @@ def obtener_servicio_calendario():
             creds = flow.run_local_server(port=0)
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
-    
     return build('calendar', 'v3', credentials=creds)
 
-# --- HERRAMIENTAS ---
 
 @tool
 def calcular_fase(fecha_inicio_periodo: str, fecha_hoy: str) -> str:
@@ -40,18 +36,17 @@ def calcular_fase(fecha_inicio_periodo: str, fecha_hoy: str) -> str:
         inicio = datetime.datetime.strptime(fecha_inicio_periodo, "%Y-%m-%d")
         actual = datetime.datetime.strptime(fecha_hoy, "%Y-%m-%d")
         dias = (actual - inicio).days + 1
-        
-        if dias < 0: 
+        if dias < 0:
             return "Error: La fecha de inicio no puede ser en el futuro."
-        if 1 <= dias <= 5: 
+        if 1 <= dias <= 5:
             return "Menstrual"
-        elif 6 <= dias <= 13: 
+        elif 6 <= dias <= 13:
             return "Folicular"
-        elif 14 <= dias <= 15: 
+        elif 14 <= dias <= 15:
             return "Ovulatoria"
-        elif 16 <= dias <= 32: 
+        elif 16 <= dias <= 32:
             return "Lútea"
-        else: 
+        else:
             return "Fase no identificada: El ciclo excede los 32 días. Por favor, verifica las fechas."
     except ValueError:
         return "Error: Formato de fecha inválido. Por favor usa YYYY-MM-DD."
@@ -62,21 +57,14 @@ def consultar_base_cientifica(tema: str) -> str:
     try:
         with open("conocimiento_bio.txt", "r", encoding="utf-8") as file:
             base_datos = file.read()
-        
         parrafos = base_datos.split("\n\n")
-        # Dividimos la consulta en palabras (keywords) ignorando conectores cortos
         keywords = [w.lower() for w in tema.split() if len(w) > 3]
-        
         for p in parrafos:
-            # Si TODAS las palabras clave están en el párrafo, es el correcto
             if all(k in p.lower() for k in keywords):
                 return f"Extracto científico: {p.strip()}"
-        
-        # Si no encuentra todas juntas, buscamos si al menos aparece una
         for p in parrafos:
             if any(k in p.lower() for k in keywords):
                 return f"Extracto científico relacionado: {p.strip()}"
-                
         return "No se encontró información específica sobre ese tema."
     except FileNotFoundError:
         return "Error: Base de datos científica no disponible."
@@ -86,7 +74,7 @@ def consultar_base_cientifica(tema: str) -> str:
 @tool
 def generar_lista_super(fase: str) -> str:
     """Genera una lista de compras categorizada para la fase hormonal."""
-    fase = fase.capitalize() 
+    fase = fase.capitalize()
     recomendaciones = {
         "Menstrual": "PROTEÍNAS: Carne roja magra, lentejas. GRASAS: Semillas de calabaza. CARBOS: Frutos rojos, jengibre.",
         "Folicular": "PROTEÍNAS: Pollo, huevos. GRASAS: Aguacate, almendras. CARBOS: Kimchi, brócoli, coliflor.",
@@ -105,7 +93,7 @@ def sugerir_recetas(fase: str) -> str:
         "Ovulatoria": "Ensalada de Salmón y Frutos Rojos",
         "Lútea": "Cena de Descanso (Camote y Arroz Integral)"
     }
-    nombre = nombres.get(fase, "Ensalada Bio-Flow") 
+    nombre = nombres.get(fase, "Ensalada Bio-Flow")
     return f"🍳 Sugerencia: {nombre}. ¿Te gustaría que te explique los ingredientes y cómo prepararlo?"
 
 @tool
@@ -148,7 +136,6 @@ def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
     """Envía por correo el plan detallado de 7 días usando formato HTML."""
     remitente = os.getenv("EMAIL_SENDER")
     password = os.getenv("EMAIL_PASSWORD")
-    
     if len(plan_semanal_completo) < 50:
         return "Error: El plan generado parece estar incompleto."
 
@@ -156,8 +143,6 @@ def enviar_reporte_email(correo: str, plan_semanal_completo: str) -> str:
     msg['From'] = remitente
     msg['To'] = correo
     msg['Subject'] = "Tu Bio-Plan Semanal: Optimización Hormonal 🧬"
-    
-    # Formato en HTML para aceptar etiquetas de diseño y color
     msg.attach(MIMEText(plan_semanal_completo, 'html', 'utf-8'))
 
     try:
@@ -177,7 +162,6 @@ def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
         service = obtener_servicio_calendario()
         hora_input_limpia = hora_input.lower().replace(" ", "")
         hora, minuto = 17, 0
-        
         if "pm" in hora_input_limpia:
             hora_base = int(hora_input_limpia.replace("pm", "").split(":")[0])
             hora = hora_base if hora_base == 12 else hora_base + 12
@@ -194,7 +178,6 @@ def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
             fecha_evento = ahora + datetime.timedelta(days=dia)
             inicio = fecha_evento.replace(hour=hora % 24, minute=minuto, second=0, microsecond=0)
             fin = inicio + datetime.timedelta(minutes=30)
-            
             evento = {
                 'summary': f'Bio-Check ({fase_actual}) - Día {dia+1}',
                 'description': 'Momento para alinear tu energía con tu biología.',
@@ -202,7 +185,6 @@ def agendar_bio_checks(fase_actual: str, hora_input: str) -> str:
                 'end': {'dateTime': fin.isoformat(), 'timeZone': 'America/Mexico_City'},
             }
             service.events().insert(calendarId='primary', body=evento).execute()
-            
         return f"Éxito: 7 Bio-Checks agendados a las {hora % 24:02d}:{minuto:02d}."
     except ValueError:
         return f"Error: No pude entender la hora '{hora_input}'. Por favor, pídele a la usuaria un formato claro como '8 AM' o '20:00'."

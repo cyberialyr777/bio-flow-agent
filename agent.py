@@ -1,7 +1,7 @@
 from strands import Agent
 from tools import (
-    calcular_fase, generar_lista_super, sugerir_recetas, 
-    consultar_base_cientifica, obtener_enfoque_mental, 
+    calcular_fase, generar_lista_super, sugerir_recetas,
+    consultar_base_cientifica, obtener_enfoque_mental,
     explicar_preparacion, enviar_reporte_email, agendar_bio_checks
 )
 from datetime import datetime
@@ -39,7 +39,7 @@ Informa a la usuaria su fase actual con un tono empoderador. LUEGO, ofrece EXACT
 Pregunta cuál prefiere y DETENTE.
 
 PASO 4: EJECUCIÓN RUTA A (CORREO Y CALENDARIO)
-- Si la usuaria elige la Ruta A: DEBES PREGUNTAR el correo electrónico Y la hora (ej. 8 AM, 6 PM) de los Bio-Checks. 
+- Si la usuaria elige la Ruta A: DEBES PREGUNTAR el correo electrónico Y la hora (ej. 8 AM, 6 PM) de los Bio-Checks.
 - ESTÁ ESTRICTAMENTE PROHIBIDO inventar un correo (como usuario@ejemplo.com) o una hora (como 8 AM).
 - DEBES DETENERTE POR COMPLETO aquí. NO invoques herramientas todavía.
 - SOLO CUANDO la usuaria haya escrito su correo y hora reales en el chat, procede con este flujo:
@@ -70,15 +70,14 @@ CONTROL DE FLUJO CRÍTICO:
 Bajo ninguna circunstancia realices una llamada a herramienta (tool call) con datos que no hayan sido proporcionados por la usuaria en el turno de chat inmediatamente anterior.
 """
 
-# Lista de herramientas
 tools_list = [
-    calcular_fase, 
-    generar_lista_super, 
-    sugerir_recetas, 
-    consultar_base_cientifica, 
-    obtener_enfoque_mental, 
-    explicar_preparacion, 
-    enviar_reporte_email, 
+    calcular_fase,
+    generar_lista_super,
+    sugerir_recetas,
+    consultar_base_cientifica,
+    obtener_enfoque_mental,
+    explicar_preparacion,
+    enviar_reporte_email,
     agendar_bio_checks
 ]
 
